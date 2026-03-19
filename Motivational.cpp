@@ -12,6 +12,7 @@ Ver 1.1 / 19/3/2026 Broke down entire code to functions
 Ver 1.2 / 19/3/2026 Added in a function to print a quote on the main UI
 Ver 1.3 / 20/3/2026 Added in a function to delete quotes from the library
 Ver 1.4 / 20/3/2026 Added in a function to randomise a quote from the library
+Ver 1.5 / 21/3/2026 Added in a feature to keep the main UI and library contained in the same loop
 */
 
 using namespace std;
@@ -49,48 +50,64 @@ int main()
         showQuote(randomIdx);
     }
     else {
-        cout << "\n[No quotes found in library yet]\n" << endl;
+        cout << "\nNo quotes found in library yet\n" << endl;
     }
 
     cout << "Options: ";
     cin >> Option;
 
-    if (Option == "1")
+    while (Option != "e" || Option != "E")
     {
-        addQuote();
-    }
-    else if (Option == "2")
-    {
-        randomQuote();
-    }
-    else if (Option == "3")
-    {
-        showLibrary();
-    }
-    else if (Option == "e" || Option == "E")
-    {
-		cout << "Exiting program." << endl;
-		system("pause");
-        return 0;
-    }
-    else if (Option == "4")
-    {
-        int index;
-        showLibrary();
-        cout << "type in return to go back to the main menu" << endl;
-        cout << "Enter index to delete: ";
-        cin >> index;
+        if (Option == "1")
+        {
+            addQuote();
+        }
+        else if (Option == "2")
+        {
+            randomQuote();
+        }
+        else if (Option == "3")
+        {
+            showLibrary();
+            cout << "Type 'return' to go back to the previous screen" << endl;
 
-        deleteQuote(index);
-    }
-    else
-    {
-        cout << "Invalid option selected." << endl;
-        cin >> Option;
+            cin >> Option;
+            if (Option == "return")
+            {
+                main();
+            }
+            else
+                while (Option != "return")
+                {
+                    cout << "Invalid option selected." << endl;
+                    cin >> Option;
+                }
+
+        }
+        else if (Option == "4")
+        {
+            int index;
+            showLibrary();
+            cout << "type in return to go back to the main menu" << endl;
+            cout << "Enter index to delete: ";
+            cin >> index;
+
+            deleteQuote(index);
+        }
+		else if (Option == "e" || Option == "E")
+        {
+            break; // Exit the loop and end the program
+        }
+        else
+        {
+            cout << "Invalid option selected." << endl;
+            cin >> Option;
+        }
     }
 
-    //system("pause");
-    //return 0;
+    cout << "Exiting program." << endl;
+    system("pause");
+    return 0;
 }
 
 void displayMenu()
@@ -114,40 +131,49 @@ void addQuote()
 
     // Step 1: Read file to find last index
     ifstream inFile("QuoteArchive.txt");
-
     if (inFile)
     {
         while (inFile >> tempIndex)
         {
-            lastIndex = tempIndex;       // keep updating to last seen index
-            getline(inFile, tempLine);   // skip the rest of the line
+            lastIndex = tempIndex;
+            getline(inFile, tempLine);
         }
         inFile.close();
     }
 
-    // Get new quote input
-    cout << "Enter your quote: " << endl << "type in 'return' to go back to the previous screen" << endl;
-    cin.ignore();
+    // Step 2: Get new quote input
+    cout << "Enter your quote: " << endl;
+    cout << "Type 'return' to go back to the previous screen" << endl;
+
+    // Clear the buffer and get the line
+    cin.ignore(1000, '\n');
     getline(cin, Quote);
 
-    // Append new indexed quote
-    ofstream outFile("QuoteArchive.txt", ios::app);
+    // Step 3: Check if user wants to cancel
+    if (Quote == "return")
+    {
+        main(); // This exits the function and goes back to the main loop
+    }
 
+    // Step 4: Append new indexed quote
+    ofstream outFile("QuoteArchive.txt", ios::app);
     if (!outFile)
     {
         cout << "Error opening file!" << endl;
-        return;
-    }
-    
-    if (Quote == "return")
-    {
-        return;
+        Sleep(2000);
         main();
     }
-    outFile << (lastIndex + 1) << " " << Quote << endl;
+
+    // Using setw(10) to match your showLibrary formatting
+    outFile << left << setw(10) << (lastIndex + 1) << Quote << endl;
     outFile.close();
 
     cout << "Quote added with index " << (lastIndex + 1) << "!" << endl;
+
+    // Step 5: Pause then "fall off" the end of the function
+    Sleep(2000);
+    main();
+
 }
 
 void showLibrary()
@@ -176,7 +202,7 @@ void showLibrary()
     }
 
     inFile.close();
-   
+
 }
 
 void randomQuote()
