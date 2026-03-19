@@ -16,6 +16,7 @@ Ver 1.5 - 19/3/2026 Added in a feature to keep the main UI and library contained
 Ver 1.6 - 19/3/2026 Bug fixes in Option 4
 Ver 1.7 - 20/3/2026 Implemented the random quote function & Favorite quote function to the main UI
 Ver 1.8 - 20/3/2026 Qualtiy improvements to addQuote and Option 1
+Ver 1.8a - 20/3/2026 Redesigned Option 5's exit to main loop process
 */
 
 using namespace std;
@@ -33,11 +34,11 @@ int main()
 {
     SetConsoleOutputCP(CP_UTF8);
     
-
+    bool exit = false;
     string Option;
 
     displayMenu();
- 
+    
     ifstream modeFile("mode.txt");
     string mode = "random"; // default
 
@@ -59,7 +60,7 @@ int main()
     cout << "Options: ";
     cin >> Option;
 
-    while (Option != "e" || Option != "E")
+    while (exit != true)
     {
         if (Option == "1")
         {
@@ -146,13 +147,20 @@ int main()
         }
         else if (Option == "5")
         {
-			system("cls");
-            showQuote();
-
+            cout << "Are you sure you want to proceed? Y / N:" << endl;
+            cin >> Option;
+            if (Option == "Y" || Option == "y")
+            {
+                system("cls");
+                showQuote();
+            }
+            else if (Option == "N" || Option == "n")
+                return main();
         }
         else if (Option == "e" || Option == "E")
         {
-            break; // Exit the loop and end the program
+            break;
+            return main();// Exit the loop and end the program
         }
         else
         {
@@ -203,12 +211,6 @@ void addQuote()
     // Clear the buffer and get the line
     cin.ignore(1000, '\n');
     getline(cin, Quote);
-
-    // Step 3: Check if user wants to cancel
-    if (Quote == "return")
-    {
-        return; // This exits the function and goes back to the main loop
-    }
 
     // Step 4: Append new indexed quote
     ofstream outFile("QuoteArchive.txt", ios::app);
