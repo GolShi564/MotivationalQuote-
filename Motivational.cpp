@@ -10,6 +10,7 @@
 Version Number / Date / Description 
 Ver 1.1 / 19/3/2026 Broke down entire code to functions
 Ver 1.2 / 19/3/2026 Added in a function to print a quote on the main UI
+Ver 1.3 / 20/3/2026 Added in a function to delete quotes from the library
 */
 
 using namespace std;
@@ -19,6 +20,7 @@ void addQuote();
 void showLibrary();
 void randomQuote();
 void showQuote(int index);
+void deleteQuote(int index);
 
 int main()
 {
@@ -27,7 +29,7 @@ int main()
     string Option;
     
     displayMenu();
-    showQuote(4);
+    showQuote(3);
 
     cout << "Options: ";
     cin >> Option;
@@ -50,6 +52,16 @@ int main()
 		system("pause");
         return 0;
     }
+    else if (Option == "4")
+    {
+        int index;
+        showLibrary();
+        cout << "type in"
+        cout << "Enter index to delete: ";
+        cin >> index;
+
+        deleteQuote(index);
+    }
     else
     {
         cout << "Invalid option selected." << endl;
@@ -65,6 +77,7 @@ void displayMenu()
     cout << "1. Add in a new quote" << endl;
     cout << "2. Randomise your quote" << endl;
     cout << "3. See Quote Library" << endl;
+	cout << "4. Delete Quote" << endl;
     cout << "e. Close Window" << endl;
 }
 
@@ -211,4 +224,44 @@ void showQuote(int targetIndex)
     }
 
     inFile.close();
+}
+
+void deleteQuote(int targetIndex)
+{
+    ifstream inFile("QuoteArchive.txt");
+    ofstream tempFile("temp.txt");
+
+    if (!inFile || !tempFile)
+    {
+        cout << "Error opening file!" << endl;
+        return;
+    }
+
+    int Index, newIndex = 1;
+    string Quote;
+    bool found = false;
+
+    while (inFile >> Index)
+    {
+        getline(inFile, Quote);
+
+        if (Index == targetIndex)
+        {
+            found = true;
+            continue;
+        }
+
+        tempFile << newIndex++ << Quote << endl;
+    }
+
+    inFile.close();
+    tempFile.close();
+
+    remove("QuoteArchive.txt");
+    rename("temp.txt", "QuoteArchive.txt");
+
+    if (found)
+        cout << "Quote deleted and re-indexed!" << endl;
+    else
+        cout << "Quote not found." << endl;
 }
