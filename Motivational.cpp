@@ -6,13 +6,14 @@
 #include <windows.h>
 #include <ctime>
 
-/*Version History 
-Version Number / Date / Description 
-Ver 1.1 / 19/3/2026 Broke down entire code to functions
-Ver 1.2 / 19/3/2026 Added in a function to print a quote on the main UI
-Ver 1.3 / 20/3/2026 Added in a function to delete quotes from the library
-Ver 1.4 / 20/3/2026 Added in a function to randomise a quote from the library
-Ver 1.5 / 21/3/2026 Added in a feature to keep the main UI and library contained in the same loop
+/*Version History
+Version Number - Date / Description
+Ver 1.1 - 19/3/2026 Broke down entire code to functions
+Ver 1.2 - 19/3/2026 Added in a function to print a quote on the main UI
+Ver 1.3 - 19/3/2026 Added in a function to delete quotes from the library
+Ver 1.4 - 19/3/2026 Added in a function to randomise a quote from the library
+Ver 1.5 - 19/3/2026 Added in a feature to keep the main UI and library contained in the same loop
+Ver 1.6 - 19/3/2026 Bug fixes in Option 4
 */
 
 using namespace std;
@@ -43,7 +44,7 @@ int main()
         totalQuotes++;
     }
     countFile.close();
-    
+
     displayMenu();
     if (totalQuotes > 0) {
         int randomIdx = (rand() % totalQuotes) + 1;
@@ -74,7 +75,7 @@ int main()
             cin >> Option;
             if (Option == "return")
             {
-                main();
+                return main();
             }
             else
                 while (Option != "return")
@@ -87,14 +88,31 @@ int main()
         else if (Option == "4")
         {
             int index;
+			char Option;
             showLibrary();
             cout << "type in return to go back to the main menu" << endl;
             cout << "Enter index to delete: ";
             cin >> index;
 
             deleteQuote(index);
+
+            cout << "Do you wish to delete another quote N/Y?" << endl;
+            cin >> Option;
+			if (Option == 'y' || Option == 'Y')
+            {
+                continue; // This will go back to the start of the loop and show the library again
+            }
+            else if (Option == 'n' || Option == 'N')
+            {
+                return main(); // This will go back to the main menu
+            }
+            else
+            {
+                cout << "Invalid option selected." << endl;
+                cin >> Option;
+            }
         }
-		else if (Option == "e" || Option == "E")
+        else if (Option == "e" || Option == "E")
         {
             break; // Exit the loop and end the program
         }
@@ -116,7 +134,7 @@ void displayMenu()
     cout << "1. Add in a new quote" << endl;
     cout << "2. Randomise your quote" << endl;
     cout << "3. See Quote Library" << endl;
-	cout << "4. Delete Quote" << endl;
+    cout << "4. Delete Quote" << endl;
     cout << "e. Close Window" << endl;
 }
 
@@ -152,7 +170,7 @@ void addQuote()
     // Step 3: Check if user wants to cancel
     if (Quote == "return")
     {
-        main(); // This exits the function and goes back to the main loop
+        return; // This exits the function and goes back to the main loop
     }
 
     // Step 4: Append new indexed quote
@@ -161,7 +179,7 @@ void addQuote()
     {
         cout << "Error opening file!" << endl;
         Sleep(2000);
-        main();
+        return;
     }
 
     // Using setw(10) to match your showLibrary formatting
@@ -178,10 +196,10 @@ void addQuote()
 
 void showLibrary()
 {
-    
+
     system("cls");
     ifstream inFile("QuoteArchive.txt");
-   
+
     if (!inFile)
     {
         cout << "Unable to open file" << endl;
@@ -202,7 +220,6 @@ void showLibrary()
     }
 
     inFile.close();
-
 }
 
 void randomQuote()
