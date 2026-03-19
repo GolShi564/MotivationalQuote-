@@ -15,6 +15,7 @@ Ver 1.4 - 19/3/2026 Added in a function to randomise a quote from the library
 Ver 1.5 - 19/3/2026 Added in a feature to keep the main UI and library contained in the same loop
 Ver 1.6 - 19/3/2026 Bug fixes in Option 4
 Ver 1.7 - 20/3/2026 Implemented the random quote function & Favorite quote function to the main UI
+Ver 1.8 - 20/3/2026 Qualtiy improvements to addQuote and Option 1
 */
 
 using namespace std;
@@ -62,7 +63,12 @@ int main()
     {
         if (Option == "1")
         {
-            addQuote();
+			cout << "Are you sure you want to add a quote ? Y / N:" << endl;
+			cin >> Option;
+            if (Option == "Y" || Option == "y")
+                addQuote();
+            else if (Option == "N" || Option == "n")
+                return main();
         }
         else if (Option == "2")
         {
@@ -214,7 +220,7 @@ void addQuote()
     }
 
     // Using setw(10) to match your showLibrary formatting
-    outFile << left << setw(10) << (lastIndex + 1) << Quote << endl;
+    outFile << "\n" << left << "\t" << (lastIndex + 1) << Quote << endl;
     outFile.close();
 
     cout << "Quote added with index " << (lastIndex + 1) << "!" << endl;
