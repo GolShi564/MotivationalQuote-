@@ -9,6 +9,7 @@
 /*Version History 
 Version Number / Date / Description 
 Ver 1.1 / 19/3/2026 Broke down entire code to functions
+Ver 1.2 / 19/3/2026 Added in a function to print a quote on the main UI
 */
 
 using namespace std;
@@ -17,13 +18,16 @@ void displayMenu();
 void addQuote();
 void showLibrary();
 void randomQuote();
+void showQuote(int index);
 
 int main()
 {
     SetConsoleOutputCP(CP_UTF8);
 
     string Option;
+    
     displayMenu();
+    showQuote(4);
 
     cout << "Options: ";
     cin >> Option;
@@ -40,7 +44,7 @@ int main()
     {
         showLibrary();
     }
-    else if (Option == "e")
+    else if (Option == "e" || Option == "E")
     {
 		cout << "Exiting program." << endl;
 		system("pause");
@@ -57,6 +61,7 @@ int main()
 
 void displayMenu()
 {
+    system("cls");
     cout << "1. Add in a new quote" << endl;
     cout << "2. Randomise your quote" << endl;
     cout << "3. See Quote Library" << endl;
@@ -69,6 +74,8 @@ void addQuote()
     int lastIndex = 0;
     int tempIndex;
     string tempLine;
+
+    system("cls");
 
     // Step 1: Read file to find last index
     ifstream inFile("QuoteArchive.txt");
@@ -83,12 +90,12 @@ void addQuote()
         inFile.close();
     }
 
-    // Step 2: Get new quote input
-    cout << "Enter your quote: " << endl << "type in return to go back to the previous screen" << endl;
+    // Get new quote input
+    cout << "Enter your quote: " << endl << "type in 'return' to go back to the previous screen" << endl;
     cin.ignore();
     getline(cin, Quote);
 
-    // Step 3: Append new indexed quote
+    // Append new indexed quote
     ofstream outFile("QuoteArchive.txt", ios::app);
 
     if (!outFile)
@@ -99,6 +106,7 @@ void addQuote()
     
     if (Quote == "return")
     {
+        system("cls");
         main();
     }
     outFile << (lastIndex + 1) << " " << Quote << endl;
@@ -109,8 +117,10 @@ void addQuote()
 
 void showLibrary()
 {
+    
+    system("cls");
     ifstream inFile("QuoteArchive.txt");
-
+   
     if (!inFile)
     {
         cout << "Unable to open file" << endl;
@@ -119,6 +129,7 @@ void showLibrary()
 
     string Quote;
     int Index;
+    string Option;
 
     cout << left;
     cout << setw(10) << "Index" << "Quote" << endl;
@@ -130,10 +141,12 @@ void showLibrary()
     }
 
     inFile.close();
+   
 }
 
 void randomQuote()
 {
+    system("cls");
     ifstream inFile("QuoteArchive.txt");
 
     if (!inFile)
@@ -163,4 +176,39 @@ void randomQuote()
     int randomIndex = rand() % quotes.size();
 
     cout << "Random Quote: " << quotes[randomIndex] << endl;
+}
+
+void showQuote(int targetIndex)
+{
+    ifstream inFile("QuoteArchive.txt");
+
+    if (!inFile)
+    {
+        cout << "Unable to open file" << endl;
+        return;
+    }
+
+    int Index;
+    string Quote;
+    bool found = false;
+
+    while (inFile >> Index)
+    {
+        getline(inFile, Quote);
+        Quote.erase(0, 1);
+
+        if (Index == targetIndex)
+        {
+            cout << endl << Quote << endl << endl;
+            found = true;
+            break;
+        }
+    }
+
+    if (!found)
+    {
+        cout << "Quote with index " << targetIndex << " not found." << endl;
+    }
+
+    inFile.close();
 }
