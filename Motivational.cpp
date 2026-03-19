@@ -11,6 +11,7 @@ Version Number / Date / Description
 Ver 1.1 / 19/3/2026 Broke down entire code to functions
 Ver 1.2 / 19/3/2026 Added in a function to print a quote on the main UI
 Ver 1.3 / 20/3/2026 Added in a function to delete quotes from the library
+Ver 1.4 / 20/3/2026 Added in a function to randomise a quote from the library
 */
 
 using namespace std;
@@ -25,11 +26,31 @@ void deleteQuote(int index);
 int main()
 {
     SetConsoleOutputCP(CP_UTF8);
+    srand(static_cast<unsigned int>(time(0)));
 
     string Option;
+
+    // --- New Logic to pick a random index ---
+    int totalQuotes = 0;
+    ifstream countFile("QuoteArchive.txt");
+    int tempIdx;
+    string tempQuote;
+
+    // Count how many quotes are in the file
+    while (countFile >> tempIdx) {
+        getline(countFile, tempQuote);
+        totalQuotes++;
+    }
+    countFile.close();
     
     displayMenu();
-    showQuote(3);
+    if (totalQuotes > 0) {
+        int randomIdx = (rand() % totalQuotes) + 1;
+        showQuote(randomIdx);
+    }
+    else {
+        cout << "\n[No quotes found in library yet]\n" << endl;
+    }
 
     cout << "Options: ";
     cin >> Option;
@@ -56,7 +77,7 @@ int main()
     {
         int index;
         showLibrary();
-        cout << "type in"
+        cout << "type in return to go back to the main menu" << endl;
         cout << "Enter index to delete: ";
         cin >> index;
 
@@ -65,6 +86,7 @@ int main()
     else
     {
         cout << "Invalid option selected." << endl;
+        cin >> Option;
     }
 
     //system("pause");
@@ -119,7 +141,7 @@ void addQuote()
     
     if (Quote == "return")
     {
-        system("cls");
+        return;
         main();
     }
     outFile << (lastIndex + 1) << " " << Quote << endl;
