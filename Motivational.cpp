@@ -8,12 +8,13 @@
 
 /*Version History
 Version Number - Date / Description
-Ver 1.1 - 19/3/2026 Broke down entire code to functions
+Ver 1.1 - 19/3/2026 Broke down entire code into functions
 Ver 1.2 - 19/3/2026 Added in a function to print a quote on the main UI
 Ver 1.3 - 19/3/2026 Added in a function to delete quotes from the library
 Ver 1.4 - 19/3/2026 Added in a function to randomise a quote from the library
 Ver 1.5 - 19/3/2026 Added in a feature to keep the main UI and library contained in the same loop
 Ver 1.6 - 19/3/2026 Bug fixes in Option 4
+Ver 1.7 - 20/3/2026 Implemented the random quote function & Favorite quote function to the main UI
 */
 
 using namespace std;
@@ -22,36 +23,36 @@ void displayMenu();
 void addQuote();
 void showLibrary();
 void randomQuote();
-void showQuote(int index);
+void showQuote();
+void displayFavorite();
 void deleteQuote(int index);
+void displayRandomQuote();
 
 int main()
 {
     SetConsoleOutputCP(CP_UTF8);
-    srand(static_cast<unsigned int>(time(0)));
+    
 
     string Option;
 
-    // --- New Logic to pick a random index ---
-    int totalQuotes = 0;
-    ifstream countFile("QuoteArchive.txt");
-    int tempIdx;
-    string tempQuote;
-
-    // Count how many quotes are in the file
-    while (countFile >> tempIdx) {
-        getline(countFile, tempQuote);
-        totalQuotes++;
-    }
-    countFile.close();
-
     displayMenu();
-    if (totalQuotes > 0) {
-        int randomIdx = (rand() % totalQuotes) + 1;
-        showQuote(randomIdx);
+ 
+    ifstream modeFile("mode.txt");
+    string mode = "random"; // default
+
+    if (modeFile)
+    {
+        modeFile >> mode;
     }
-    else {
-        cout << "\nNo quotes found in library yet\n" << endl;
+    modeFile.close();
+
+    if (mode == "favorite")
+    {
+        displayFavorite();
+    }
+    else
+    {
+        displayRandomQuote();
     }
 
     cout << "Options: ";
@@ -65,7 +66,31 @@ int main()
         }
         else if (Option == "2")
         {
-            randomQuote();
+            ifstream modeFile("mode.txt");
+            string mode = "random";
+
+            if (modeFile)
+                modeFile >> mode;
+
+            modeFile.close();
+
+            ofstream outFile("mode.txt");
+
+            if (mode == "random")
+            {
+                outFile << "favorite";
+                cout << "Switched to FAVORITE quote mode." << endl;
+            }
+            else
+            {
+                outFile << "random";
+                cout << "Switched to RANDOM quote mode." << endl;
+            }
+
+            outFile.close();
+
+			Sleep(2000);
+            return main();
         }
         else if (Option == "3")
         {
@@ -81,6 +106,7 @@ int main()
                 while (Option != "return")
                 {
                     cout << "Invalid option selected." << endl;
+                    cout << "Options: ";
                     cin >> Option;
                 }
 
@@ -112,6 +138,12 @@ int main()
                 cin >> Option;
             }
         }
+        else if (Option == "5")
+        {
+			system("cls");
+            showQuote();
+
+        }
         else if (Option == "e" || Option == "E")
         {
             break; // Exit the loop and end the program
@@ -135,6 +167,7 @@ void displayMenu()
     cout << "2. Randomise your quote" << endl;
     cout << "3. See Quote Library" << endl;
     cout << "4. Delete Quote" << endl;
+    cout << "5. Set a Favorite Quote" << endl;
     cout << "e. Close Window" << endl;
 }
 
@@ -160,9 +193,7 @@ void addQuote()
     }
 
     // Step 2: Get new quote input
-    cout << "Enter your quote: " << endl;
-    cout << "Type 'return' to go back to the previous screen" << endl;
-
+    cout << "Enter your quote \nType 'return' to go back to the previous screen \nQuote: ";
     // Clear the buffer and get the line
     cin.ignore(1000, '\n');
     getline(cin, Quote);
@@ -211,12 +242,12 @@ void showLibrary()
     string Option;
 
     cout << left;
-    cout << setw(10) << "Index" << "Quote" << endl;
+    cout  << "Index" << "\t\t\t" << "Quote" << endl;
 
     while (inFile >> Index)
     {
         getline(inFile, Quote);
-        cout << setw(10) << Index << Quote << endl;
+        cout << Index << "\t" << Quote << endl;
     }
 
     inFile.close();
@@ -256,7 +287,7 @@ void randomQuote()
     cout << "Random Quote: " << quotes[randomIndex] << endl;
 }
 
-void showQuote(int targetIndex)
+void showQuote()
 {
     ifstream inFile("QuoteArchive.txt");
 
@@ -268,24 +299,76 @@ void showQuote(int targetIndex)
 
     int Index;
     string Quote;
-    bool found = false;
+
+    cout << left << setw(10) << "Index" << "Quote" << endl;
+
+    // Display all quotes
+    while (inFile >> Index)
+    {
+        getline(inFile, Quote);
+        Quote.erase(0, 1);
+
+        cout << left << setw(10) << Index << Quote << endl;
+    }
+
+    inFile.close();
+
+    // Ask user to choose favorite
+    int choice;
+    cout << "\nChoose a quote to favorite\n";
+    cout << "Index: ";
+    cin >> choice;
+
+    // Save favorite index
+    ofstream favFile("favorite.txt");
+
+    if (!favFile)
+    {
+        cout << "Error saving favorite." << endl;
+        return;
+    }
+
+    favFile << choice;
+    favFile.close();
+
+    ofstream modeFile("mode.txt");
+    modeFile << "favorite";
+    modeFile.close();
+
+    cout << "\nFavorite quote set successfully!\n" << endl;
+    Sleep(2000);
+    main();
+}
+
+void displayFavorite()
+{
+    ifstream favFile("favorite.txt");
+
+    if (!favFile)
+        return; // no favorite yet
+
+    int favIndex;
+    favFile >> favIndex;
+    favFile.close();
+
+    ifstream inFile("QuoteArchive.txt");
+
+    if (!inFile)
+        return;
+
+    int Index;
+    string Quote;
 
     while (inFile >> Index)
     {
         getline(inFile, Quote);
         Quote.erase(0, 1);
 
-        if (Index == targetIndex)
+        if (Index == favIndex)
         {
-            cout << endl << Quote << endl << endl;
-            found = true;
+            cout << "\n" << Quote << "\n\n";
             break;
         }
-    }
-
-    if (!found)
-    {
-        cout << "Quote with index " << targetIndex << " not found." << endl;
     }
 
     inFile.close();
@@ -329,4 +412,29 @@ void deleteQuote(int targetIndex)
         cout << "Quote deleted and re-indexed!" << endl;
     else
         cout << "Quote not found." << endl;
+}
+
+void displayRandomQuote()
+{
+    ifstream inFile("QuoteArchive.txt");
+
+    if (!inFile)
+        return;
+
+    vector<string> quotes;
+    string line;
+
+    while (getline(inFile, line))
+    {
+        quotes.push_back(line);
+    }
+
+    inFile.close();
+
+    if (quotes.empty()) return;
+
+    srand(time(0));
+    int r = rand() % quotes.size();
+
+    cout << "\n" << quotes[r] << "\n\n";
 }
