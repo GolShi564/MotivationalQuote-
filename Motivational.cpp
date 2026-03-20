@@ -17,10 +17,12 @@ Ver 1.6 - 19/3/2026 Bug fixes in Option 4
 Ver 1.7 - 20/3/2026 Implemented the random quote function & Favorite quote function to the main UI
 Ver 1.8 - 20/3/2026 Qualtiy improvements to addQuote and Option 1
 Ver 1.8a - 20/3/2026 Redesigned Option 5's exit to main loop process
+Ver 1.9 - 20/3/2026 Fixed a bug within option 4 
 */
 
 using namespace std;
 
+//Function Declarations
 void displayMenu();
 void addQuote();
 void showLibrary();
@@ -30,6 +32,7 @@ void displayFavorite();
 void deleteQuote(int index);
 void displayRandomQuote();
 
+//Main Function
 int main()
 {
     SetConsoleOutputCP(CP_UTF8);
@@ -37,9 +40,9 @@ int main()
     bool exit = false;
     string Option;
 
-    displayMenu();
+	displayMenu(); // Display the menu at the start of the program
     
-    ifstream modeFile("mode.txt");
+    ifstream modeFile("mode.txt"); 
     string mode = "random"; // default
 
     if (modeFile)
@@ -123,27 +126,42 @@ int main()
             int index;
 			char Option;
             showLibrary();
-            cout << "type in return to go back to the main menu" << endl;
-            cout << "Enter index to delete: ";
-            cin >> index;
 
-            deleteQuote(index);
-
-            cout << "Do you wish to delete another quote N/Y?" << endl;
-            cin >> Option;
-			if (Option == 'y' || Option == 'Y')
+            cout << "Are you sure you want to proceed? Y / N:" << endl;
+			cin >> Option;
+            if (Option == 'y' || Option == 'Y')
             {
-                continue; // This will go back to the start of the loop and show the library again
+                cout << "type in the corresponding index and then press enter to delete the quote" << endl;
+                cout << "Enter index to delete: ";
+                cin >> index;
+
+                deleteQuote(index);
+
+                cout << "Do you wish to delete another quote N/Y?" << endl;
+                cin >> Option;
+                if (Option == 'y' || Option == 'Y')
+                {
+                    continue; // This will go back to the start of the loop and show the library again
+                }
+                else if (Option == 'n' || Option == 'N')
+                {
+                    return main(); // This will go back to the main menu
+                }
+                else
+                {
+                    cout << "Invalid option selected." << endl;
+                    cin >> Option;
+                }
             }
             else if (Option == 'n' || Option == 'N')
             {
-                return main(); // This will go back to the main menu
-            }
-            else
+                return main();
+			}
+            else 
             {
                 cout << "Invalid option selected." << endl;
                 cin >> Option;
-            }
+			}
         }
         else if (Option == "5")
         {
