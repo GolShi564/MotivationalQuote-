@@ -18,6 +18,7 @@ Ver 1.7 - 20/3/2026 Implemented the random quote function & Favorite quote funct
 Ver 1.8 - 20/3/2026 Qualtiy improvements to addQuote and Option 1
 Ver 1.8a - 20/3/2026 Redesigned Option 5's exit to main loop process
 Ver 1.9 - 20/3/2026 Fixed a bug within option 4 
+Ver 2.0 - 21/3/2026 Bug fixes in option 5
 */
 
 using namespace std;
@@ -40,40 +41,41 @@ int main()
     bool exit = false;
     string Option;
 
-	displayMenu(); // Display the menu at the start of the program
-    
-    ifstream modeFile("mode.txt"); 
-    string mode = "random"; // default
-
-    if (modeFile)
+    do
     {
-        modeFile >> mode;
-    }
-    modeFile.close();
+        system("cls");
 
-    if (mode == "favorite")
-    {
-        displayFavorite();
-    }
-    else
-    {
-        displayRandomQuote();
-    }
+        displayMenu();
 
-    cout << "Options: ";
-    cin >> Option;
+        // ===== Show quote =====
+        ifstream modeFile("mode.txt");
+        string mode = "random";
 
-    while (exit != true)
-    {
+        if (modeFile)
+            modeFile >> mode;
+
+        modeFile.close();
+
+        if (mode == "favorite")
+            displayFavorite();
+        else
+            displayRandomQuote();
+
+        // ===== Get input =====
+        cout << "Options: ";
+        cin >> Option;
+
+        // ===== Handle options =====
         if (Option == "1")
         {
-			cout << "Are you sure you want to add a quote ? Y / N:" << endl;
-			cin >> Option;
-            if (Option == "Y" || Option == "y")
+            string confirm;
+            cout << "Add quote? (Y/N): ";
+            cin >> confirm;
+
+            if (confirm == "Y" || confirm == "y")
                 addQuote();
-            else if (Option == "N" || Option == "n")
-                return main();
         }
+
         else if (Option == "2")
         {
             ifstream modeFile("mode.txt");
@@ -89,105 +91,85 @@ int main()
             if (mode == "random")
             {
                 outFile << "favorite";
-                cout << "Switched to FAVORITE quote mode." << endl;
+                cout << "Switched to FAVORITE mode.\n";
             }
             else
             {
                 outFile << "random";
-                cout << "Switched to RANDOM quote mode." << endl;
+                cout << "Switched to RANDOM mode.\n";
             }
 
             outFile.close();
-
-			Sleep(2000);
-            return main();
+            Sleep(1500);
         }
+
         else if (Option == "3")
         {
             showLibrary();
-            cout << "Type 'return' to go back to the previous screen" << endl;
-
-            cin >> Option;
-            if (Option == "return")
-            {
-                return main();
-            }
-            else
-                while (Option != "return")
-                {
-                    cout << "Invalid option selected." << endl;
-                    cout << "Options: ";
-                    cin >> Option;
-                }
-
+            system("pause");
         }
+
         else if (Option == "4")
         {
-            int index;
-			char Option;
-            showLibrary();
+            char choice = 'y';
 
-            cout << "Are you sure you want to proceed? Y / N:" << endl;
-			cin >> Option;
-            if (Option == 'y' || Option == 'Y')
+            while (choice == 'y' || choice == 'Y')
             {
-                cout << "type in the corresponding index and then press enter to delete the quote" << endl;
-                cout << "Enter index to delete: ";
+                system("cls");
+                showLibrary();
+
+                int index;
+                cout << "\nEnter index to delete: ";
                 cin >> index;
 
                 deleteQuote(index);
 
-                cout << "Do you wish to delete another quote N/Y?" << endl;
-                cin >> Option;
-                if (Option == 'y' || Option == 'Y')
+                cout << "\nDelete another? (Y/N): ";
+                cin >> choice;
+            }
+        }
+
+        else if (Option == "5")
+        {
+            string confirm;
+
+            do
+            {
+                cout << "Proceed to set favorite? (Y/N): ";
+                cin >> confirm;
+
+                if (confirm == "Y" || confirm == "y")
                 {
-                    continue; // This will go back to the start of the loop and show the library again
+                    system("cls");
+                    showQuote();
+                    break;
                 }
-                else if (Option == 'n' || Option == 'N')
+                else if (confirm == "N" || confirm == "n")
                 {
-                    return main(); // This will go back to the main menu
+                    break;
                 }
                 else
                 {
-                    cout << "Invalid option selected." << endl;
-                    cin >> Option;
+                    cout << "Invalid input.\n";
                 }
-            }
-            else if (Option == 'n' || Option == 'N')
-            {
-                return main();
-			}
-            else 
-            {
-                cout << "Invalid option selected." << endl;
-                cin >> Option;
-			}
+
+            } while (true);
         }
-        else if (Option == "5")
-        {
-            cout << "Are you sure you want to proceed? Y / N:" << endl;
-            cin >> Option;
-            if (Option == "Y" || Option == "y")
-            {
-                system("cls");
-                showQuote();
-            }
-            else if (Option == "N" || Option == "n")
-                return main();
-        }
+
         else if (Option == "e" || Option == "E")
         {
+            cout << "Exiting program...\n";
             break;
-            return main();// Exit the loop and end the program
         }
+
         else
         {
-            cout << "Invalid option selected." << endl;
-            cin >> Option;
+            cout << "Invalid option selected.\n";
+            Sleep(1000);
         }
-    }
 
-    cout << "Exiting program." << endl;
+    } while (true);
+
     system("pause");
     return 0;
 }
@@ -247,7 +229,7 @@ void addQuote()
 
     // Step 5: Pause then "fall off" the end of the function
     Sleep(2000);
-    main();
+    return;
 
 }
 
@@ -315,55 +297,55 @@ void randomQuote()
 
 void showQuote()
 {
-    ifstream inFile("QuoteArchive.txt");
+        ifstream inFile("QuoteArchive.txt");
 
-    if (!inFile)
-    {
-        cout << "Unable to open file" << endl;
-        return;
-    }
+        if (!inFile)
+        {
+            cout << "Unable to open file" << endl;
+            return;
+        }
 
-    int Index;
-    string Quote;
+        int Index;
+        string Quote;
 
-    cout << left << setw(10) << "Index" << "Quote" << endl;
+        cout << left << setw(10) << "Index" << "Quote" << endl;
 
-    // Display all quotes
-    while (inFile >> Index)
-    {
-        getline(inFile, Quote);
-        Quote.erase(0, 1);
+        // Display all quotes
+        while (inFile >> Index)
+        {
+            getline(inFile, Quote);
+            Quote.erase(0, 1);
 
-        cout << left << setw(10) << Index << Quote << endl;
-    }
+            cout << left << setw(10) << Index << Quote << endl;
+        }
 
-    inFile.close();
+        inFile.close();
 
-    // Ask user to choose favorite
-    int choice;
-    cout << "\nChoose a quote to favorite\n";
-    cout << "Index: ";
-    cin >> choice;
+        // Ask user to choose favorite
+        int choice;
+        cout << "\nChoose a quote to favorite\n";
+        cout << "Index: ";
+        cin >> choice;
 
-    // Save favorite index
-    ofstream favFile("favorite.txt");
+        // Save favorite index
+        ofstream favFile("favorite.txt");
 
-    if (!favFile)
-    {
-        cout << "Error saving favorite." << endl;
-        return;
-    }
+        if (!favFile)
+        {
+            cout << "Error saving favorite." << endl;
+            return;
+        }
 
-    favFile << choice;
-    favFile.close();
+        favFile << choice;
+        favFile.close();
 
-    ofstream modeFile("mode.txt");
-    modeFile << "favorite";
-    modeFile.close();
+        ofstream modeFile("mode.txt");
+        modeFile << "favorite";
+        modeFile.close();
 
-    cout << "\nFavorite quote set successfully!\n" << endl;
-    Sleep(2000);
-    main();
+        cout << "\nFavorite quote set successfully!\n" << endl;
+        Sleep(2000);
+      
 }
 
 void displayFavorite()
