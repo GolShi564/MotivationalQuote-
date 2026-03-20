@@ -19,7 +19,7 @@ Ver 1.8 - 20/3/2026 Qualtiy improvements to addQuote and Option 1
 Ver 1.8a - 20/3/2026 Redesigned Option 5's exit to main loop process
 Ver 1.9 - 20/3/2026 Fixed a bug within option 4
 Ver 2.0 - 21/3/2026 Bug fixes in option 5
-Ver 2.0a - Modified code to utilise classes,polymorphism and inheritance for improved modularity,readability and maintainability
+Ver 2.0a - 21/3/2026 Modified code to utilise classes,polymorphism and inheritance for improved modularity,readability and maintainability
 */
 
 using namespace std;
