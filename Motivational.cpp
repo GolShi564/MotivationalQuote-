@@ -17,29 +17,219 @@ Ver 1.6 - 19/3/2026 Bug fixes in Option 4
 Ver 1.7 - 20/3/2026 Implemented the random quote function & Favorite quote function to the main UI
 Ver 1.8 - 20/3/2026 Qualtiy improvements to addQuote and Option 1
 Ver 1.8a - 20/3/2026 Redesigned Option 5's exit to main loop process
-Ver 1.9 - 20/3/2026 Fixed a bug within option 4 
+Ver 1.9 - 20/3/2026 Fixed a bug within option 4
 Ver 2.0 - 21/3/2026 Bug fixes in option 5
+Ver 2.0a - 21/3/2026 Modified code to utilise classes,polymorphism and inheritance for improved modularity,readability and maintainability
 */
 
 using namespace std;
 
-//Function Declarations
-void displayMenu();
-void addQuote();
-void showLibrary();
-void randomQuote();
-void showQuote();
-void displayFavorite();
-void deleteQuote(int index);
-void displayRandomQuote();
+// ================= BASE CLASS =================
+class QuoteManager
+{
+protected:
+    string filename = "QuoteArchive.txt";
 
-//Main Function
+public:
+    virtual void display() = 0; // Polymorphism
+
+    vector<string> readAllQuotes()
+    {
+        ifstream inFile(filename);
+        vector<string> quotes;
+        string line;
+
+        while (getline(inFile, line))
+        {
+            quotes.push_back(line);
+        }
+
+        return quotes;
+    }
+};
+
+// ================= LIBRARY CLASS =================
+class LibraryManager : public QuoteManager
+{
+public:
+    void display() override
+    {
+        system("cls");
+
+        ifstream inFile(filename);
+
+        int index;
+        string quote;
+
+        cout << "Index\tQuote\n";
+
+        while (inFile >> index)
+        {
+            getline(inFile, quote);
+            cout << index << "\t" << quote << endl;
+        }
+
+        inFile.close();
+    }
+
+    void addQuote()
+    {
+        int lastIndex = 0, tempIndex;
+        string tempLine;
+
+        ifstream inFile(filename);
+        while (inFile >> tempIndex)
+        {
+            lastIndex = tempIndex;
+            getline(inFile, tempLine);
+        }
+        inFile.close();
+
+        cin.ignore();
+        string quote;
+        cout << "Enter quote:\n";
+        getline(cin, quote);
+
+        ofstream outFile(filename, ios::app);
+        outFile << "\n" << (lastIndex + 1) << " " << quote;
+        outFile.close();
+
+        cout << "Quote added!\n";
+        Sleep(1500);
+    }
+
+    void deleteQuote(int target)
+    {
+        ifstream inFile(filename);
+        ofstream temp("temp.txt");
+
+        int index, newIndex = 1;
+        string quote;
+
+        while (inFile >> index)
+        {
+            getline(inFile, quote);
+
+            if (index == target) continue;
+
+            temp << newIndex++ << quote << endl;
+        }
+
+        inFile.close();
+        temp.close();
+
+        remove("QuoteArchive.txt");
+        rename("temp.txt", "QuoteArchive.txt");
+
+        cout << "Quote deleted!\n";
+        Sleep(1500);
+    }
+};
+
+// ================= FAVORITE CLASS =================
+class FavoriteManager : public QuoteManager
+{
+public:
+    void display() override
+    {
+        ifstream favFile("favorite.txt");
+        if (!favFile) return;
+
+        int favIndex;
+        favFile >> favIndex;
+        favFile.close();
+
+        ifstream inFile(filename);
+
+        int index;
+        string quote;
+
+        while (inFile >> index)
+        {
+            getline(inFile, quote);
+
+            if (index == favIndex)
+            {
+                cout << "\n" << quote << "\n\n";
+                break;
+            }
+        }
+
+        inFile.close();
+    }
+
+    void setFavorite()
+    {
+        ifstream inFile(filename);
+
+        int index;
+        string quote;
+
+        cout << "Index\tQuote\n";
+
+        while (inFile >> index)
+        {
+            getline(inFile, quote);
+            cout << index << "\t" << quote << endl;
+        }
+
+        inFile.close();
+
+        int choice;
+        cout << "\nChoose favorite index: ";
+        cin >> choice;
+
+        ofstream favFile("favorite.txt");
+        favFile << choice;
+        favFile.close();
+
+        ofstream modeFile("mode.txt");
+        modeFile << "favorite";
+        modeFile.close();
+
+        cout << "Favorite saved!\n";
+        Sleep(1500);
+    }
+};
+
+// ================= RANDOM CLASS =================
+class RandomManager : public QuoteManager
+{
+public:
+    void display() override
+    {
+        vector<string> quotes = readAllQuotes();
+
+        if (quotes.empty()) return;
+
+        srand(time(0));
+        int r = rand() % quotes.size();
+
+        cout << "\n" << quotes[r] << "\n\n";
+    }
+};
+
+// ================= MENU =================
+void displayMenu()
+{
+    cout << "1. Add in a new quote\n";
+    cout << "2. Toggle Random/Favorite\n";
+    cout << "3. See Quote Library\n";
+    cout << "4. Delete Quote\n";
+    cout << "5. Set a Favorite Quote\n";
+    cout << "e. Close Window\n\n";
+}
+
+// ================= MAIN =================
 int main()
 {
     SetConsoleOutputCP(CP_UTF8);
-    
-    bool exit = false;
-    string Option;
+
+    LibraryManager library;
+    FavoriteManager favorite;
+    RandomManager random;
+
+    string option;
 
     do
     {
@@ -47,7 +237,7 @@ int main()
 
         displayMenu();
 
-        // ===== Show quote =====
+        // ===== MODE HANDLING =====
         ifstream modeFile("mode.txt");
         string mode = "random";
 
@@ -56,107 +246,72 @@ int main()
 
         modeFile.close();
 
+        QuoteManager* manager;
+
         if (mode == "favorite")
-            displayFavorite();
+            manager = &favorite;
         else
-            displayRandomQuote();
+            manager = &random;
 
-        // ===== Get input =====
+        manager->display(); // 🔥 POLYMORPHISM
+
+        // ===== INPUT =====
         cout << "Options: ";
-        cin >> Option;
+        cin >> option;
 
-        // ===== Handle options =====
-        if (Option == "1")
+        // ===== OPTIONS =====
+        if (option == "1")
         {
             string confirm;
             cout << "Add quote? (Y/N): ";
             cin >> confirm;
 
             if (confirm == "Y" || confirm == "y")
-                addQuote();
+                library.addQuote();
         }
 
-        else if (Option == "2")
+        else if (option == "2")
         {
-            ifstream modeFile("mode.txt");
-            string mode = "random";
-
-            if (modeFile)
-                modeFile >> mode;
-
-            modeFile.close();
-
-            ofstream outFile("mode.txt");
+            ofstream out("mode.txt");
 
             if (mode == "random")
             {
-                outFile << "favorite";
+                out << "favorite";
                 cout << "Switched to FAVORITE mode.\n";
             }
             else
             {
-                outFile << "random";
+                out << "random";
                 cout << "Switched to RANDOM mode.\n";
             }
 
-            outFile.close();
+            out.close();
             Sleep(1500);
         }
 
-        else if (Option == "3")
+        else if (option == "3")
         {
-            showLibrary();
+            library.display();
             system("pause");
         }
 
-        else if (Option == "4")
+        else if (option == "4")
         {
-            char choice = 'y';
+            int index;
+            library.display();
 
-            while (choice == 'y' || choice == 'Y')
-            {
-                system("cls");
-                showLibrary();
+            cout << "\nEnter index to delete: ";
+            cin >> index;
 
-                int index;
-                cout << "\nEnter index to delete: ";
-                cin >> index;
-
-                deleteQuote(index);
-
-                cout << "\nDelete another? (Y/N): ";
-                cin >> choice;
-            }
+            library.deleteQuote(index);
         }
 
-        else if (Option == "5")
+        else if (option == "5")
         {
-            string confirm;
-
-            do
-            {
-                cout << "Proceed to set favorite? (Y/N): ";
-                cin >> confirm;
-
-                if (confirm == "Y" || confirm == "y")
-                {
-                    system("cls");
-                    showQuote();
-                    break;
-                }
-                else if (confirm == "N" || confirm == "n")
-                {
-                    break;
-                }
-                else
-                {
-                    cout << "Invalid input.\n";
-                }
-
-            } while (true);
+            favorite.setFavorite();
         }
 
-        else if (Option == "e" || Option == "E")
+        else if (option == "e" || option == "E")
         {
             cout << "Exiting program...\n";
             break;
@@ -170,279 +325,5 @@ int main()
 
     } while (true);
 
-    system("pause");
     return 0;
-}
-
-void displayMenu()
-{
-    system("cls");
-    cout << "1. Add in a new quote" << endl;
-    cout << "2. Randomise your quote" << endl;
-    cout << "3. See Quote Library" << endl;
-    cout << "4. Delete Quote" << endl;
-    cout << "5. Set a Favorite Quote" << endl;
-    cout << "e. Close Window" << endl;
-}
-
-void addQuote()
-{
-    string Quote;
-    int lastIndex = 0;
-    int tempIndex;
-    string tempLine;
-
-    system("cls");
-
-    // Step 1: Read file to find last index
-    ifstream inFile("QuoteArchive.txt");
-    if (inFile)
-    {
-        while (inFile >> tempIndex)
-        {
-            lastIndex = tempIndex;
-            getline(inFile, tempLine);
-        }
-        inFile.close();
-    }
-
-    // Step 2: Get new quote input
-    cout << "Enter your quote \nType 'return' to go back to the previous screen \nQuote: ";
-    // Clear the buffer and get the line
-    cin.ignore(1000, '\n');
-    getline(cin, Quote);
-
-    // Step 4: Append new indexed quote
-    ofstream outFile("QuoteArchive.txt", ios::app);
-    if (!outFile)
-    {
-        cout << "Error opening file!" << endl;
-        Sleep(2000);
-        return;
-    }
-
-    // Using setw(10) to match your showLibrary formatting
-    outFile << "\n" << left << "\t" << (lastIndex + 1) << Quote << endl;
-    outFile.close();
-
-    cout << "Quote added with index " << (lastIndex + 1) << "!" << endl;
-
-    // Step 5: Pause then "fall off" the end of the function
-    Sleep(2000);
-    return;
-
-}
-
-void showLibrary()
-{
-
-    system("cls");
-    ifstream inFile("QuoteArchive.txt");
-
-    if (!inFile)
-    {
-        cout << "Unable to open file" << endl;
-        return;
-    }
-
-    string Quote;
-    int Index;
-    string Option;
-
-    cout << left;
-    cout  << "Index" << "\t\t\t" << "Quote" << endl;
-
-    while (inFile >> Index)
-    {
-        getline(inFile, Quote);
-        cout << Index << "\t" << Quote << endl;
-    }
-
-    inFile.close();
-}
-
-void randomQuote()
-{
-    system("cls");
-    ifstream inFile("QuoteArchive.txt");
-
-    if (!inFile)
-    {
-        cout << "Unable to open file" << endl;
-        return;
-    }
-
-    vector<string> quotes;
-    string line;
-
-    // Read entire file
-    while (getline(inFile, line))
-    {
-        quotes.push_back(line);
-    }
-
-    inFile.close();
-
-    if (quotes.empty())
-    {
-        cout << "No quotes available." << endl;
-        return;
-    }
-
-    srand(time(0));
-    int randomIndex = rand() % quotes.size();
-
-    cout << "Random Quote: " << quotes[randomIndex] << endl;
-}
-
-void showQuote()
-{
-        ifstream inFile("QuoteArchive.txt");
-
-        if (!inFile)
-        {
-            cout << "Unable to open file" << endl;
-            return;
-        }
-
-        int Index;
-        string Quote;
-
-        cout << left << setw(10) << "Index" << "Quote" << endl;
-
-        // Display all quotes
-        while (inFile >> Index)
-        {
-            getline(inFile, Quote);
-            Quote.erase(0, 1);
-
-            cout << left << setw(10) << Index << Quote << endl;
-        }
-
-        inFile.close();
-
-        // Ask user to choose favorite
-        int choice;
-        cout << "\nChoose a quote to favorite\n";
-        cout << "Index: ";
-        cin >> choice;
-
-        // Save favorite index
-        ofstream favFile("favorite.txt");
-
-        if (!favFile)
-        {
-            cout << "Error saving favorite." << endl;
-            return;
-        }
-
-        favFile << choice;
-        favFile.close();
-
-        ofstream modeFile("mode.txt");
-        modeFile << "favorite";
-        modeFile.close();
-
-        cout << "\nFavorite quote set successfully!\n" << endl;
-        Sleep(2000);
-      
-}
-
-void displayFavorite()
-{
-    ifstream favFile("favorite.txt");
-
-    if (!favFile)
-        return; // no favorite yet
-
-    int favIndex;
-    favFile >> favIndex;
-    favFile.close();
-
-    ifstream inFile("QuoteArchive.txt");
-
-    if (!inFile)
-        return;
-
-    int Index;
-    string Quote;
-
-    while (inFile >> Index)
-    {
-        getline(inFile, Quote);
-        Quote.erase(0, 1);
-
-        if (Index == favIndex)
-        {
-            cout << "\n" << Quote << "\n\n";
-            break;
-        }
-    }
-
-    inFile.close();
-}
-
-void deleteQuote(int targetIndex)
-{
-    ifstream inFile("QuoteArchive.txt");
-    ofstream tempFile("temp.txt");
-
-    if (!inFile || !tempFile)
-    {
-        cout << "Error opening file!" << endl;
-        return;
-    }
-
-    int Index, newIndex = 1;
-    string Quote;
-    bool found = false;
-
-    while (inFile >> Index)
-    {
-        getline(inFile, Quote);
-
-        if (Index == targetIndex)
-        {
-            found = true;
-            continue;
-        }
-
-        tempFile << newIndex++ << Quote << endl;
-    }
-
-    inFile.close();
-    tempFile.close();
-
-    remove("QuoteArchive.txt");
-    rename("temp.txt", "QuoteArchive.txt");
-
-    if (found)
-        cout << "Quote deleted and re-indexed!" << endl;
-    else
-        cout << "Quote not found." << endl;
-}
-
-void displayRandomQuote()
-{
-    ifstream inFile("QuoteArchive.txt");
-
-    if (!inFile)
-        return;
-
-    vector<string> quotes;
-    string line;
-
-    while (getline(inFile, line))
-    {
-        quotes.push_back(line);
-    }
-
-    inFile.close();
-
-    if (quotes.empty()) return;
-
-    srand(time(0));
-    int r = rand() % quotes.size();
-
-    cout << "\n" << quotes[r] << "\n\n";
 }
